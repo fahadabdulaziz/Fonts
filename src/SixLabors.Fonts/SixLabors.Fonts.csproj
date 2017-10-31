@@ -41,7 +41,6 @@
 
   <ItemGroup>
     <AdditionalFiles Include="..\..\stylecop.json" />
-    <Content Include="..\..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
   
   <ItemGroup>
@@ -49,13 +48,7 @@
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Reference Include="SixLabors.Core">
-      <HintPath>..\..\..\Core\src\SixLabors.Core\bin\Debug\netstandard2.0\SixLabors.Core.dll</HintPath>
-    </Reference>
+    <PackageReference Include="SixLabors.Core" Version="1.0.0-beta0003" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
