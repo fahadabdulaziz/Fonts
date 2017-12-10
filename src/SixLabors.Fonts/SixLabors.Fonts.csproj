@@ -6,7 +6,7 @@
         <VersionPrefix Condition="$(packageversion) != ''">$(packageversion)</VersionPrefix>
         <VersionPrefix Condition="$(packageversion) == ''">0.1.0-alpha1</VersionPrefix>
         <Authors>Six Labors and contributors</Authors>
-        <TargetFrameworks>netstandard2.0;netstandard1.3;netstandard1.1</TargetFrameworks>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <AssemblyName>SixLabors.Fonts</AssemblyName>
@@ -35,6 +35,8 @@
 
     <PropertyGroup>
         <CodeAnalysisRuleSet>..\SixLabors.ruleset</CodeAnalysisRuleSet>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>BotasCore.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -46,7 +48,13 @@
             <PrivateAssets>All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
-        <PackageReference Include="SixLabors.Core" Version="1.0.0-beta0004" />
+        <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="SixLabors.Core">
+        <HintPath>..\..\..\Core\src\SixLabors.Core\bin\Debug\netstandard2.0\SixLabors.Core.dll</HintPath>
+      </Reference>
     </ItemGroup>
     <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' OR '$(TargetFramework)' == 'netstandard2.0'">
         <DefineConstants>$(DefineConstants);FILESYSTEM</DefineConstants>
