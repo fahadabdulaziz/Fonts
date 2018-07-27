@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.IO;
 using System.Numerics;
 using SixLabors.Fonts.Tables.General;
@@ -29,6 +30,21 @@ namespace SixLabors.Fonts
         public int LineHeight { get; }
 
         /// <summary>
+        /// Gets the ascender.
+        /// </summary>
+        public short Ascender { get; }
+
+        /// <summary>
+        /// Gets the descender.
+        /// </summary>
+        public short Descender { get; }
+
+        /// <summary>
+        /// Gets the line gap.
+        /// </summary>
+        public short LineGap { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FontInstance"/> class.
         /// </summary>
         /// <param name="nameTable">The name table.</param>
@@ -49,6 +65,9 @@ namespace SixLabors.Fonts
 
             // https://www.microsoft.com/typography/otspec/recom.htm#tad
             this.LineHeight = os2.TypoAscender - os2.TypoDescender + os2.TypoLineGap;
+            this.Ascender = os2.TypoAscender;
+            this.Descender = os2.TypoDescender;
+            this.LineGap = os2.TypoLineGap;
             this.EmSize = this.head.UnitsPerEm;
             this.kerning = kern;
             this.Description = new FontDescription(nameTable, os2, head);
@@ -64,25 +83,30 @@ namespace SixLabors.Fonts
 
         public FontDescription Description { get; }
 
-        internal ushort GetGlyphIndex(char character)
+        internal ushort GetGlyphIndex(int codePoint)
         {
-            return this.cmap.GetGlyphId(character);
+            if (codePoint > short.MaxValue)
+            {
+                throw new NotImplementedException("cmap table doesn't support 32-bit characters yet.");
+            }
+
+            return this.cmap.GetGlyphId(codePoint);
         }
 
         /// <summary>
         /// Gets the glyph.
         /// </summary>
-        /// <param name="character">The character.</param>
+        /// <param name="codePoint">The code point of the character.</param>
         /// <returns>the glyph for a known character.</returns>
-        public GlyphInstance GetGlyph(char character)
+        GlyphInstance IFontInstance.GetGlyph(int codePoint)
         {
-            ushort idx = this.GetGlyphIndex(character);
+            ushort idx = this.GetGlyphIndex(codePoint);
             if (this.glyphCache[idx] == null)
             {
                 ushort advanceWidth = this.horizontalMetrics.GetAdvancedWidth(idx);
                 short lsb = this.horizontalMetrics.GetLeftSideBearing(idx);
                 Tables.General.Glyphs.GlyphVector vector = this.glyphs.GetGlyph(idx);
-                this.glyphCache[idx] = new GlyphInstance(vector.ControlPoints, vector.OnCurves, vector.EndPoints, vector.Bounds, advanceWidth, lsb, this.EmSize, idx);
+                this.glyphCache[idx] = new GlyphInstance(this, vector.ControlPoints, vector.OnCurves, vector.EndPoints, vector.Bounds, advanceWidth, lsb, this.EmSize, idx);
             }
 
             return this.glyphCache[idx];
@@ -94,7 +118,7 @@ namespace SixLabors.Fonts
         /// <param name="glyph">The glyph.</param>
         /// <param name="previousGlyph">The previous glyph.</param>
         /// <returns>A <see cref="Vector2"/> represting the offset that should be applied to the <paramref name="glyph"/>. </returns>
-        public Vector2 GetOffset(GlyphInstance glyph, GlyphInstance previousGlyph)
+        Vector2 IFontInstance.GetOffset(GlyphInstance glyph, GlyphInstance previousGlyph)
         {
             // we also want to wire int sub/super script offsetting into here too
             if (previousGlyph == null)
@@ -142,10 +166,12 @@ namespace SixLabors.Fonts
             reader.GetTable<MaximumProfileTable>(); // maxp
             OS2Table os2 = reader.GetTable<OS2Table>(); // OS/2
             HorizontalMetricsTable horizontalMetrics = reader.GetTable<HorizontalMetricsTable>(); // hmtx
+
             // LTSH - Linear threshold data
             // VDMX - Vertical device metrics
             // hdmx - Horizontal device metrics
             CMapTable cmap = reader.GetTable<CMapTable>(); // cmap
+
             // fpgm - Font Program
             // prep - Control Value Program
             // cvt  - Control Value Table
@@ -153,6 +179,7 @@ namespace SixLabors.Fonts
             GlyphTable glyphs = reader.GetTable<GlyphTable>(); // glyf
             KerningTable kern = reader.GetTable<KerningTable>(); // kern - Kerning
             NameTable nameTable = reader.GetTable<NameTable>(); // name
+
             // post - PostScript information
             // gasp - Grid-fitting/Scan-conversion (optional table)
             // PCLT - PCL 5 data

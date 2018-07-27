@@ -117,6 +117,26 @@ namespace SixLabors.Fonts
         public ushort EmSize => this.instance.Value.EmSize;
 
         /// <summary>
+        /// Gets the ascender (from the OS/2 table field <c>TypoAscender</c>).
+        /// </summary>
+        public short Ascender => this.instance.Value.Ascender;
+
+        /// <summary>
+        /// Gets the descender (from the OS/2 table field <c>TypoDescender</c>).
+        /// </summary>
+        public short Descender => this.instance.Value.Descender;
+
+        /// <summary>
+        /// Gets the line gap (from the OS/2 table field <c>TypoLineGap</c>).
+        /// </summary>
+        public short LineGap => this.instance.Value.LineGap;
+
+        /// <summary>
+        /// Gets the line height.
+        /// </summary>
+        public int LineHeight => this.instance.Value.LineHeight;
+
+        /// <summary>
         /// Gets the font instance.
         /// </summary>
         /// <value>
@@ -127,11 +147,11 @@ namespace SixLabors.Fonts
         /// <summary>
         /// Gets the glyph.
         /// </summary>
-        /// <param name="character">The character.</param>
+        /// <param name="codePoint">The code point of the character.</param>
         /// <returns>Returns the glyph</returns>
-        internal Glyph GetGlyph(char character)
+        internal Glyph GetGlyph(int codePoint)
         {
-            return new Glyph(this.instance.Value.GetGlyph(character), this.Size);
+            return new Glyph(this.instance.Value.GetGlyph(codePoint), this.Size);
         }
 
         private IFontInstance LoadInstanceInternal()

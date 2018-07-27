@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using SixLabors.Fonts.Exceptions;
@@ -15,8 +14,8 @@ namespace SixLabors.Fonts
     /// </summary>
     public sealed class FontCollection : IFontCollection
     {
-        private Dictionary<string, List<IFontInstance>> instances = new Dictionary<string, List<IFontInstance>>(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, FontFamily> families = new Dictionary<string, FontFamily>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, List<IFontInstance>> instances = new Dictionary<string, List<IFontInstance>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, FontFamily> families = new Dictionary<string, FontFamily>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FontCollection"/> class.
@@ -31,7 +30,7 @@ namespace SixLabors.Fonts
         /// <value>
         /// The families.
         /// </value>
-        public IEnumerable<FontFamily> Families => this.families.Values.ToImmutableArray();
+        public IEnumerable<FontFamily> Families => this.families.Values;
 
 #if FILESYSTEM
         /// <summary>
@@ -41,10 +40,20 @@ namespace SixLabors.Fonts
         /// <returns>the description of the font just loaded.</returns>
         public FontFamily Install(string path)
         {
-            using (FileStream fs = File.OpenRead(path))
-            {
-                return this.Install(fs);
-            }
+            return this.Install(path, out _);
+        }
+
+        /// <summary>
+        /// Installs a font from the specified path.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <param name="fontDescription">The font description of the installed font.</param>
+        /// <returns>the description of the font just loaded.</returns>
+        public FontFamily Install(string path, out FontDescription fontDescription)
+        {
+            FileFontInstance instance = new FileFontInstance(path);
+            fontDescription = instance.Description;
+            return this.Install(instance);
         }
 #endif
 
@@ -55,7 +64,19 @@ namespace SixLabors.Fonts
         /// <returns>the description of the font just loaded.</returns>
         public FontFamily Install(Stream fontStream)
         {
+            return this.Install(fontStream, out _);
+        }
+
+        /// <summary>
+        /// Installs the specified font stream.
+        /// </summary>
+        /// <param name="fontStream">The font stream.</param>
+        /// <param name="fontDescription">The font description of the installed font.</param>
+        /// <returns>the description of the font just loaded.</returns>
+        public FontFamily Install(Stream fontStream, out FontDescription fontDescription)
+        {
             FontInstance instance = FontInstance.LoadFont(fontStream);
+            fontDescription = instance.Description;
 
             return this.Install(instance);
         }
@@ -93,34 +114,32 @@ namespace SixLabors.Fonts
             return false;
         }
 
-        internal IEnumerable<FontStyle> AvailibleStyles(string fontFamily)
+        internal IEnumerable<FontStyle> AvailableStyles(string fontFamily)
         {
-            return this.FindAll(fontFamily).Select(x => x.Description.Style).ToImmutableArray();
+            return this.FindAll(fontFamily).Select(x => x.Description.Style).ToArray();
         }
 
         internal FontFamily Install(IFontInstance instance)
         {
-            if (instance != null && instance.Description != null)
+            Guard.NotNull(instance, nameof(instance));
+            Guard.NotNull(instance.Description, nameof(instance.Description));
+
+            lock (this.instances)
             {
-                lock (this.instances)
+                if (!this.instances.ContainsKey(instance.Description.FontFamily))
                 {
-                    if (!this.instances.ContainsKey(instance.Description.FontFamily))
-                    {
-                        this.instances.Add(instance.Description.FontFamily, new List<IFontInstance>(4));
-                    }
-
-                    if (!this.families.ContainsKey(instance.Description.FontFamily))
-                    {
-                        this.families.Add(instance.Description.FontFamily, new FontFamily(instance.Description.FontFamily, this));
-                    }
-
-                    this.instances[instance.Description.FontFamily].Add(instance);
+                    this.instances.Add(instance.Description.FontFamily, new List<IFontInstance>(4));
                 }
 
-                return this.families[instance.Description.FontFamily];
+                if (!this.families.ContainsKey(instance.Description.FontFamily))
+                {
+                    this.families.Add(instance.Description.FontFamily, new FontFamily(instance.Description.FontFamily, this));
+                }
+
+                this.instances[instance.Description.FontFamily].Add(instance);
             }
 
-            return null;
+            return this.families[instance.Description.FontFamily];
         }
 
         internal IFontInstance Find(string fontFamily, FontStyle style)
