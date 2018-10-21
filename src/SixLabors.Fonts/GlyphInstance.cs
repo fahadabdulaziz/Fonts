@@ -96,7 +96,7 @@ namespace SixLabors.Fonts
         /// <param name="location">The location.</param>
         /// <param name="dpi">The dpi.</param>
         /// <param name="lineHeight">The lineHeight the current glyph was draw agains to offset topLeft while calling out to IGlyphRenderer.</param>
-        /// <exception cref="System.NotSupportedException">Too many control points</exception>
+        /// <exception cref="NotSupportedException">Too many control points</exception>
         public void RenderTo(IGlyphRenderer surface, float pointSize, Vector2 location, Vector2 dpi, float lineHeight)
         {
             location = location * dpi;
@@ -194,26 +194,11 @@ namespace SixLabors.Fonts
 
         private static void AlignToGrid(ref Vector2 point)
         {
-            Vector2 floorPoint = new Vector2(MathF.Floor(point.X), MathF.Floor(point.Y));
+            var floorPoint = new Vector2(MathF.Floor(point.X), MathF.Floor(point.Y));
             Vector2 decimalPart = point - floorPoint;
 
-            if (decimalPart.X < 0.5)
-            {
-                decimalPart.X = 0;
-            }
-            else
-            {
-                decimalPart.X = 1;
-            }
-
-            if (decimalPart.Y < 0.5)
-            {
-                decimalPart.Y = 0;
-            }
-            else
-            {
-                decimalPart.Y = 1f;
-            }
+            decimalPart.X = decimalPart.X < 0.5f ? 0 : 1f;
+            decimalPart.Y = decimalPart.Y < 0.5f ? 0 : 1f;
 
             point = floorPoint + decimalPart;
         }

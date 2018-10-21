@@ -6,12 +6,8 @@ using SixLabors.Fonts.WellKnownIds;
 
 namespace SixLabors.Fonts.Tables.General.CMap
 {
-    internal class Format4SubTable : CMapSubTable
+    internal sealed class Format4SubTable : CMapSubTable
     {
-        internal Segment[] Segments { get; }
-
-        internal ushort[] GlyphIds { get; }
-
         public Format4SubTable(ushort language, PlatformIDs platform, ushort encoding, Segment[] segments, ushort[] glyphIds)
             : base(platform, encoding, 4)
         {
@@ -20,14 +16,20 @@ namespace SixLabors.Fonts.Tables.General.CMap
             this.GlyphIds = glyphIds;
         }
 
+        public Segment[] Segments { get; }
+
+        public ushort[] GlyphIds { get; }
+
         public ushort Language { get; }
 
         public override ushort GetGlyphId(int codePoint)
         {
             uint charAsInt = (uint)codePoint;
 
-            foreach (Segment seg in this.Segments)
+            for (int i = 0; i < this.Segments.Length; i++)
             {
+                ref Segment seg = ref this.Segments[i];
+
                 if (seg.End >= charAsInt && seg.Start <= charAsInt)
                 {
                     if (seg.Offset == 0)
@@ -91,16 +93,8 @@ namespace SixLabors.Fonts.Tables.General.CMap
             }
         }
 
-        internal class Segment
+        internal readonly struct Segment
         {
-            public short Delta { get; }
-
-            public ushort End { get; }
-
-            public ushort Offset { get; }
-
-            public ushort Start { get; }
-
             public Segment(ushort index, ushort end, ushort start, short delta, ushort offset)
             {
                 this.Index = index;
@@ -112,10 +106,18 @@ namespace SixLabors.Fonts.Tables.General.CMap
 
             public ushort Index { get; }
 
+            public short Delta { get; }
+
+            public ushort End { get; }
+
+            public ushort Offset { get; }
+
+            public ushort Start { get; }
+
             public static Segment[] Create(ushort[] endCounts, ushort[] startCode, short[] idDelta, ushort[] idRangeOffset)
             {
                 int count = endCounts.Length;
-                Segment[] segments = new Segment[count];
+                var segments = new Segment[count];
                 for (ushort i = 0; i < count; i++)
                 {
                     ushort start = startCode[i];

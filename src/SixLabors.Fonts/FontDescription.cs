@@ -53,7 +53,6 @@ namespace SixLabors.Fonts
         /// </summary>
         public string FontSubFamilyName { get; }
 
-#if FILESYSTEM
         /// <summary>
         /// Reads a <see cref="FontDescription"/> from the specified stream.
         /// </summary>
@@ -63,11 +62,10 @@ namespace SixLabors.Fonts
         {
             using (FileStream fs = File.OpenRead(path))
             {
-                FontReader reader = new FontReader(fs);
+                var reader = new FontReader(fs);
                 return LoadDescription(reader);
             }
         }
-#endif
 
         /// <summary>
         /// Reads a <see cref="FontDescription"/> from the specified stream.
@@ -77,7 +75,7 @@ namespace SixLabors.Fonts
         public static FontDescription LoadDescription(Stream stream)
         {
             // only read the name table
-            FontReader reader = new FontReader(stream);
+            var reader = new FontReader(stream);
             return LoadDescription(reader);
         }
 
@@ -90,6 +88,8 @@ namespace SixLabors.Fonts
         /// </returns>
         internal static FontDescription LoadDescription(FontReader reader)
         {
+            // NOTE: These fields are read in their optimized order
+            // https://docs.microsoft.com/en-gb/typography/opentype/spec/recom#optimized-table-ordering
             HeadTable head = reader.GetTable<HeadTable>();
             OS2Table os2 = reader.GetTable<OS2Table>();
             NameTable nameTable = reader.GetTable<NameTable>();
@@ -100,6 +100,7 @@ namespace SixLabors.Fonts
         private static FontStyle ConvertStyle(OS2Table os2, HeadTable head)
         {
             FontStyle style = FontStyle.Regular;
+
             if (os2 != null)
             {
                 if (os2.FontStyle.HasFlag(OS2Table.FontStyleSelection.BOLD))

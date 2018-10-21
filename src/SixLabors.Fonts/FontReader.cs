@@ -14,9 +14,8 @@ namespace SixLabors.Fonts
     {
         private readonly Dictionary<Type, Table> loadedTables = new Dictionary<Type, Table>();
 
-        private readonly TableLoader loader;
-
         private readonly Stream stream;
+        private readonly TableLoader loader;
 
         internal FontReader(Stream stream, TableLoader loader)
         {
@@ -26,7 +25,7 @@ namespace SixLabors.Fonts
             long startOfFilePosition = stream.Position;
 
             this.stream = stream;
-            BinaryReader reader = new BinaryReader(stream, true);
+            var reader = new BinaryReader(stream, true);
 
             // we should immediately read the table header to learn which tables we have and what order they are in
             uint version = reader.ReadUInt32();
@@ -80,7 +79,7 @@ namespace SixLabors.Fonts
                 throw new Exceptions.InvalidFontFileException("Invalid glyph format, only TTF glyph outlines supported.");
             }
 
-            Dictionary<string, TableHeader> headers = new Dictionary<string, Tables.TableHeader>(tableCount);
+            var headers = new Dictionary<string, TableHeader>(tableCount);
             for (int i = 0; i < tableCount; i++)
             {
                 TableHeader tbl = loadHeader(reader);
@@ -97,31 +96,32 @@ namespace SixLabors.Fonts
 
         public IReadOnlyDictionary<string, TableHeader> Headers { get; }
 
-        public bool CompressedTableData { get; private set; }
+        public bool CompressedTableData { get; }
 
         public OutlineTypes OutlineType { get; }
 
         public virtual TTableType GetTable<TTableType>()
             where TTableType : Table
         {
-            if (!this.loadedTables.ContainsKey(typeof(TTableType)))
+            if (this.loadedTables.TryGetValue(typeof(TTableType), out Table table))
             {
-                TTableType table = this.loader.Load<TTableType>(this);
+                return (TTableType)table;
+            }
+            else
+            {
+                table = this.loader.Load<TTableType>(this);
 
                 this.loadedTables.Add(typeof(TTableType), table);
             }
 
-            return (TTableType)this.loadedTables[typeof(TTableType)];
+            return (TTableType)table;
         }
 
         public virtual TableHeader GetHeader(string tag)
         {
-            if (this.Headers.ContainsKey(tag))
-            {
-                return this.Headers[tag];
-            }
-
-            return null;
+            return this.Headers.TryGetValue(tag, out TableHeader header)
+                ? header
+                : null;
         }
 
         public virtual BinaryReader GetReaderAtTablePosition(string tableName)

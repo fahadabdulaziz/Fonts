@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Numerics;
 using SixLabors.Fonts.Tables.General;
+using SixLabors.Fonts.Tables.General.Glyphs;
 
 namespace SixLabors.Fonts
 {
@@ -101,11 +102,11 @@ namespace SixLabors.Fonts
         GlyphInstance IFontInstance.GetGlyph(int codePoint)
         {
             ushort idx = this.GetGlyphIndex(codePoint);
-            if (this.glyphCache[idx] == null)
+            if (this.glyphCache[idx] is null)
             {
                 ushort advanceWidth = this.horizontalMetrics.GetAdvancedWidth(idx);
                 short lsb = this.horizontalMetrics.GetLeftSideBearing(idx);
-                Tables.General.Glyphs.GlyphVector vector = this.glyphs.GetGlyph(idx);
+                GlyphVector vector = this.glyphs.GetGlyph(idx);
                 this.glyphCache[idx] = new GlyphInstance(this, vector.ControlPoints, vector.OnCurves, vector.EndPoints, vector.Bounds, advanceWidth, lsb, this.EmSize, idx);
             }
 
@@ -121,7 +122,7 @@ namespace SixLabors.Fonts
         Vector2 IFontInstance.GetOffset(GlyphInstance glyph, GlyphInstance previousGlyph)
         {
             // we also want to wire int sub/super script offsetting into here too
-            if (previousGlyph == null)
+            if (previousGlyph is null)
             {
                 return Vector2.Zero;
             }
@@ -130,7 +131,6 @@ namespace SixLabors.Fonts
             return this.kerning.GetOffset(previousGlyph.Index, glyph.Index);
         }
 
-#if FILESYSTEM
         /// <summary>
         /// Reads a <see cref="FontInstance"/> from the specified stream.
         /// </summary>
@@ -140,11 +140,10 @@ namespace SixLabors.Fonts
         {
             using (FileStream fs = File.OpenRead(path))
             {
-                FontReader reader = new FontReader(fs);
+                var reader = new FontReader(fs);
                 return LoadFont(reader);
             }
         }
-#endif
 
         /// <summary>
         /// Reads a <see cref="FontInstance"/> from the specified stream.

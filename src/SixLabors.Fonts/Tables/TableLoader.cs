@@ -35,23 +35,14 @@ namespace SixLabors.Fonts.Tables
 
         public string GetTag(Type type)
         {
-            if (this.types.ContainsKey(type))
-            {
-                return this.types[type];
-            }
+            this.types.TryGetValue(type, out string value);
 
-            return null;
+            return value;
         }
 
-        internal IEnumerable<Type> RegisterdTypes()
-        {
-            return this.types.Keys;
-        }
+        internal IEnumerable<Type> RegisterdTypes() => this.types.Keys;
 
-        internal IEnumerable<string> RegisterdTags()
-        {
-            return this.types.Values;
-        }
+        internal IEnumerable<string> RegisterdTags() => this.types.Values;
 
         private void Register<T>(string tag, Func<FontReader, T> createFunc)
             where T : Table
@@ -82,21 +73,18 @@ namespace SixLabors.Fonts.Tables
         internal Table Load(string tag, FontReader reader)
         {
             // loader missing register an unknow type loader and carry on
-            if (!this.loaders.ContainsKey(tag))
-            {
-                return new UnknownTable(tag);
-            }
-
-            return this.loaders[tag]?.Invoke(reader);
+            return this.loaders.TryGetValue(tag, out var func)
+                ? func.Invoke(reader)
+                : new UnknownTable(tag);
         }
 
         internal TTable Load<TTable>(FontReader reader)
             where TTable : Table
         {
             // loader missing register an unknow type loader and carry on
-            if (this.typesLoaders.ContainsKey(typeof(TTable)))
+            if (this.typesLoaders.TryGetValue(typeof(TTable), out var func))
             {
-                return (TTable)this.typesLoaders[typeof(TTable)]?.Invoke(reader);
+                return (TTable)func.Invoke(reader);
             }
 
             throw new Exception("font table not registered");

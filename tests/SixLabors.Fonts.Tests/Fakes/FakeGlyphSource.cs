@@ -5,8 +5,6 @@ namespace SixLabors.Fonts.Tests.Fakes
 {
     internal class FakeGlyphSource
     {
-        public GlyphVector Vector { get; }
-
         public FakeGlyphSource(int codePoint, ushort index)
             : this(codePoint,
                   index,
@@ -24,8 +22,10 @@ namespace SixLabors.Fonts.Tests.Fakes
             this.Index = index;
         }
 
-        public int CodePoint { get; private set; }
+        public int CodePoint { get; }
 
-        public ushort Index { get; private set; }
+        public ushort Index { get; }
+
+        public GlyphVector Vector { get; }
     }
 }
