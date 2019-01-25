@@ -6,11 +6,11 @@ using SixLabors.Fonts.Exceptions;
 namespace SixLabors.Fonts.Tables.General
 {
     [TableName(TableName)]
-    internal class HoizontalHeadTable : Table
+    internal class HorizontalHeadTable : Table
     {
         private const string TableName = "hhea";
 
-        public HoizontalHeadTable(short ascender, short descender, short lineGap, ushort advanceWidthMax, short minLeftSideBearing, short minRightSideBearing, short xMaxExtent, short caretSlopeRise, short caretSlopeRun, short caretOffset, ushort numberOfHMetrics)
+        public HorizontalHeadTable(short ascender, short descender, short lineGap, ushort advanceWidthMax, short minLeftSideBearing, short minRightSideBearing, short xMaxExtent, short caretSlopeRise, short caretSlopeRun, short caretOffset, ushort numberOfHMetrics)
         {
             this.Ascender = ascender;
             this.Descender = descender;
@@ -47,15 +47,20 @@ namespace SixLabors.Fonts.Tables.General
 
         public short XMaxExtent { get; }
 
-        public static HoizontalHeadTable Load(FontReader reader)
+        public static HorizontalHeadTable Load(FontReader reader)
         {
-            using (BinaryReader binaryReader = reader.GetReaderAtTablePosition(TableName))
+            using (BinaryReader binaryReader = reader.TryGetReaderAtTablePosition(TableName))
             {
+                if (binaryReader == null)
+                {
+                    return null;
+                }
+
                 return Load(binaryReader);
             }
         }
 
-        public static HoizontalHeadTable Load(BinaryReader reader)
+        public static HorizontalHeadTable Load(BinaryReader reader)
         {
             // Type      | Name                 | Description
             // ----------|----------------------|----------------------------------------------------------------------------------------------------
@@ -101,7 +106,7 @@ namespace SixLabors.Fonts.Tables.General
 
             ushort numberOfHMetrics = reader.ReadUInt16();
 
-            return new HoizontalHeadTable(
+            return new HorizontalHeadTable(
                 ascender,
                 descender,
                 lineGap,
