@@ -54,7 +54,7 @@
 
     <ItemGroup>
       <Reference Include="SixLabors.Core">
-        <HintPath>..\..\..\Core\src\SixLabors.Core\bin\Debug\netstandard2.0\SixLabors.Core.dll</HintPath>
+        <HintPath>..\..\..\Core\src\SixLabors.Core\bin\Release\netstandard2.0\SixLabors.Core.dll</HintPath>
       </Reference>
     </ItemGroup>
 
