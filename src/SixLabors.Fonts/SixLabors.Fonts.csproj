@@ -27,6 +27,8 @@
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <DebugType Condition="$(codecov) != ''">full</DebugType>
+    <AssemblyVersion>2019.4.1.50</AssemblyVersion>
+    <FileVersion>2019.4.27.50</FileVersion>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
@@ -34,6 +36,19 @@
     <Compile Include="..\Shared\*.cs" Exclude="bin\**;obj\**;**\*.xproj;packages\**" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <ShouldCreateLogs>True</ShouldCreateLogs>
+    <AdvancedSettingsExpanded>True</AdvancedSettingsExpanded>
+    <UpdateAssemblyVersion>True</UpdateAssemblyVersion>
+    <UpdateAssemblyFileVersion>True</UpdateAssemblyFileVersion>
+    <UpdateAssemblyInfoVersion>False</UpdateAssemblyInfoVersion>
+    <AssemblyVersionSettings>YearStamp.MonthStamp.Increment.Increment</AssemblyVersionSettings>
+    <UpdatePackageVersion>False</UpdatePackageVersion>
+    <AssemblyInfoVersionType>SettingsVersion</AssemblyInfoVersionType>
+    <InheritWinAppVersionFrom>None</InheritWinAppVersionFrom>
+    <AssemblyFileVersionSettings>YearStamp.MonthStamp.Increment.Increment</AssemblyFileVersionSettings>
+  </PropertyGroup>
+  
   <PropertyGroup>
     <CodeAnalysisRuleSet>..\..\standards\SixLabors.ruleset</CodeAnalysisRuleSet>
     <SignAssembly>true</SignAssembly>
