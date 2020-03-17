@@ -1,4 +1,5 @@
-﻿using SixLabors.Fonts;
+using System.Numerics;
+using SixLabors.Fonts;
 using SixLabors.Primitives;
 
 namespace SixLabors.Shapes.Temp
@@ -15,11 +16,11 @@ namespace SixLabors.Shapes.Temp
         /// <param name="location">The location</param>
         /// <param name="style">The style and settings to use while rendering the glyphs</param>
         /// <returns></returns>
-        public static (IPathCollection paths, IPathCollection boxes, IPath textBox) GenerateGlyphsWithBox(string text, PointF location, RendererOptions style)
+        public static (IPathCollection paths, IPathCollection boxes, IPath textBox) GenerateGlyphsWithBox(string text, Vector2 location, RendererOptions style)
         {
-            GlyphBuilder glyphBuilder = new GlyphBuilder(location);
+            var glyphBuilder = new GlyphBuilder(location);
 
-            TextRenderer renderer = new TextRenderer(glyphBuilder);
+            var renderer = new TextRenderer(glyphBuilder);
 
             renderer.RenderText(text, style);
 
@@ -33,7 +34,7 @@ namespace SixLabors.Shapes.Temp
         /// <param name="location">The location</param>
         /// <param name="style">The style and settings to use while rendering the glyphs</param>
         /// <returns></returns>
-        public static IPathCollection GenerateGlyphs(string text, PointF location, RendererOptions style)
+        public static IPathCollection GenerateGlyphs(string text, Vector2 location, RendererOptions style)
         {
             return GenerateGlyphsWithBox(text, location, style).paths;
         }
@@ -46,7 +47,7 @@ namespace SixLabors.Shapes.Temp
         /// <returns></returns>
         public static IPathCollection GenerateGlyphs(string text, RendererOptions style)
         {
-            return GenerateGlyphs(text, PointF.Empty, style);
+            return GenerateGlyphs(text, Vector2.Zero, style);
         }
 
         /// <summary>
@@ -57,7 +58,7 @@ namespace SixLabors.Shapes.Temp
         /// <returns></returns>
         public static (IPathCollection paths, IPathCollection boxes, IPath textBox) GenerateGlyphsWithBox(string text, RendererOptions style)
         {
-            return GenerateGlyphsWithBox(text, PointF.Empty, style);
+            return GenerateGlyphsWithBox(text, Vector2.Zero, style);
         }
 
         /// <summary>
@@ -69,9 +70,9 @@ namespace SixLabors.Shapes.Temp
         /// <returns></returns>
         public static IPathCollection GenerateGlyphs(string text, IPath path, RendererOptions style)
         {
-            PathGlyphBuilder glyphBuilder = new PathGlyphBuilder(path);
+            var glyphBuilder = new PathGlyphBuilder(path);
 
-            TextRenderer renderer = new TextRenderer(glyphBuilder);
+            var renderer = new TextRenderer(glyphBuilder);
 
             renderer.RenderText(text, style);
 

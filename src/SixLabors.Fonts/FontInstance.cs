@@ -1,9 +1,11 @@
-﻿// Copyright (c) Six Labors and contributors.
+// Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using SixLabors.Fonts.Tables;
 using SixLabors.Fonts.Tables.General;
 using SixLabors.Fonts.Tables.General.Glyphs;
 
@@ -21,29 +23,6 @@ namespace SixLabors.Fonts
         private readonly HorizontalMetricsTable horizontalMetrics;
         private readonly GlyphInstance[] glyphCache;
         private readonly KerningTable kerning;
-
-        /// <summary>
-        /// Gets the height of the line.
-        /// </summary>
-        /// <value>
-        /// The height of the line.
-        /// </value>
-        public int LineHeight { get; }
-
-        /// <summary>
-        /// Gets the ascender.
-        /// </summary>
-        public short Ascender { get; }
-
-        /// <summary>
-        /// Gets the descender.
-        /// </summary>
-        public short Descender { get; }
-
-        /// <summary>
-        /// Gets the line gap.
-        /// </summary>
-        public short LineGap { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FontInstance"/> class.
@@ -75,6 +54,29 @@ namespace SixLabors.Fonts
         }
 
         /// <summary>
+        /// Gets the height of the line.
+        /// </summary>
+        /// <value>
+        /// The height of the line.
+        /// </value>
+        public int LineHeight { get; }
+
+        /// <summary>
+        /// Gets the ascender.
+        /// </summary>
+        public short Ascender { get; }
+
+        /// <summary>
+        /// Gets the descender.
+        /// </summary>
+        public short Descender { get; }
+
+        /// <summary>
+        /// Gets the line gap.
+        /// </summary>
+        public short LineGap { get; }
+
+        /// <summary>
         /// Gets the size of the em.
         /// </summary>
         /// <value>
@@ -82,6 +84,7 @@ namespace SixLabors.Fonts
         /// </value>
         public ushort EmSize { get; }
 
+        /// <inheritdoc/>
         public FontDescription Description { get; }
 
         internal ushort GetGlyphIndex(int codePoint)
@@ -148,11 +151,26 @@ namespace SixLabors.Fonts
         /// <summary>
         /// Reads a <see cref="FontInstance"/> from the specified stream.
         /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <param name="offset">Position in the stream to read the font from.</param>
+        /// <returns>a <see cref="FontInstance"/>.</returns>
+        public static FontInstance LoadFont(string path, long offset)
+        {
+            using (FileStream fs = File.OpenRead(path))
+            {
+                fs.Position = offset;
+                return LoadFont(fs);
+            }
+        }
+
+        /// <summary>
+        /// Reads a <see cref="FontInstance"/> from the specified stream.
+        /// </summary>
         /// <param name="stream">The stream.</param>
         /// <returns>a <see cref="FontInstance"/>.</returns>
         public static FontInstance LoadFont(Stream stream)
         {
-            FontReader reader = new FontReader(stream);
+            var reader = new FontReader(stream);
             return LoadFont(reader);
         }
 
@@ -184,6 +202,40 @@ namespace SixLabors.Fonts
             // PCLT - PCL 5 data
             // DSIG - Digital signature
             return new FontInstance(nameTable, cmap, glyphs, os2, horizontalMetrics, head, kern);
+        }
+
+        /// <summary>
+        /// Reads a <see cref="FontInstance"/> from the specified stream.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <returns>a <see cref="FontInstance"/>.</returns>
+        public static FontInstance[] LoadFontCollection(string path)
+        {
+            using (FileStream fs = File.OpenRead(path))
+            {
+                return LoadFontCollection(fs);
+            }
+        }
+
+        /// <summary>
+        /// Reads a <see cref="FontInstance"/> from the specified stream.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <returns>a <see cref="FontInstance"/>.</returns>
+        public static FontInstance[] LoadFontCollection(Stream stream)
+        {
+            long startPos = stream.Position;
+            var reader = new BinaryReader(stream, true);
+            var ttcHeader = TtcHeader.Read(reader);
+            var fonts = new FontInstance[(int)ttcHeader.NumFonts];
+
+            for (int i = 0; i < ttcHeader.NumFonts; ++i)
+            {
+                stream.Position = startPos + ttcHeader.OffsetTable[i];
+                fonts[i] = FontInstance.LoadFont(stream);
+            }
+
+            return fonts;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors and contributors.
+// Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SixLabors.Fonts.Exceptions;
+using SixLabors.Fonts.Tables;
 
 namespace SixLabors.Fonts
 {
@@ -73,10 +74,69 @@ namespace SixLabors.Fonts
         /// <returns>the description of the font just loaded.</returns>
         public FontFamily Install(Stream fontStream, out FontDescription fontDescription)
         {
-            FontInstance instance = FontInstance.LoadFont(fontStream);
+            var instance = FontInstance.LoadFont(fontStream);
             fontDescription = instance.Description;
 
             return this.Install(instance);
+        }
+
+        /// <summary>
+        /// Installs a true type font collection (.ttc) from the specified font collection stream.
+        /// </summary>
+        /// <param name="fontCollectionPath">The font collection path (should be typically a .ttc file like simsun.ttc).</param>
+        /// <returns>The font descriptions of the installed fonts.</returns>
+        public IEnumerable<FontFamily> InstallCollection(string fontCollectionPath)
+        {
+            return this.InstallCollection(fontCollectionPath, out _);
+        }
+
+        /// <summary>
+        /// Installs a true type font collection (.ttc) from the specified font collection stream.
+        /// </summary>
+        /// <param name="fontCollectionPath">The font collection path (should be typically a .ttc file like simsun.ttc).</param>
+        /// <param name="fontDescriptions">The descriptions of fonts installed from the collection.</param>
+        /// <returns>The font descriptions of the installed fonts.</returns>
+        public IEnumerable<FontFamily> InstallCollection(string fontCollectionPath, out IEnumerable<FontDescription> fontDescriptions)
+        {
+            FileFontInstance[] fonts = FileFontInstance.LoadFontCollection(fontCollectionPath);
+
+            var description = new FontDescription[fonts.Length];
+            var families = new HashSet<FontFamily>();
+            for (int i = 0; i < fonts.Length; i++)
+            {
+                description[i] = fonts[i].Description;
+                FontFamily family = this.Install(fonts[i]);
+                families.Add(family);
+            }
+
+            fontDescriptions = description;
+            return families;
+        }
+
+        /// <summary>
+        /// Installs a true type font collection (.ttc) from the specified font collection stream.
+        /// </summary>
+        /// <param name="fontCollectionStream">The font stream.</param>
+        /// <param name="fontDescriptions">The descriptions of fonts installed from the collection.</param>
+        /// <returns>The font descriptions of the installed fonts.</returns>
+        public IEnumerable<FontFamily> InstallCollection(Stream fontCollectionStream, out IEnumerable<FontDescription> fontDescriptions)
+        {
+            long startPos = fontCollectionStream.Position;
+            var reader = new BinaryReader(fontCollectionStream, true);
+            var ttcHeader = TtcHeader.Read(reader);
+            var result = new List<FontDescription>((int)ttcHeader.NumFonts);
+            var installedFamilies = new HashSet<FontFamily>();
+            for (int i = 0; i < ttcHeader.NumFonts; ++i)
+            {
+                fontCollectionStream.Position = startPos + ttcHeader.OffsetTable[i];
+                var instance = FontInstance.LoadFont(fontCollectionStream);
+                installedFamilies.Add(this.Install(instance));
+                FontDescription fontDescription = instance.Description;
+                result.Add(fontDescription);
+            }
+
+            fontDescriptions = result;
+            return installedFamilies;
         }
 
         /// <summary>
@@ -140,7 +200,7 @@ namespace SixLabors.Fonts
             return this.families[instance.Description.FontFamily];
         }
 
-        internal IFontInstance Find(string fontFamily, FontStyle style)
+        internal IFontInstance? Find(string fontFamily, FontStyle style)
         {
             return this.instances.TryGetValue(fontFamily, out List<IFontInstance> inFamily)
                 ? inFamily.FirstOrDefault(x => x.Description.Style == style)

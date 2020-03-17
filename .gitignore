@@ -256,4 +256,6 @@ paket-files/
 /tests/CodeCoverage/OpenCover.*
 SixLabors.Shapes.Coverage.xml
 /SixLabors.Fonts.Coverage.xml
-*.snk
+
+/coverage.*.xml
+*.lcov

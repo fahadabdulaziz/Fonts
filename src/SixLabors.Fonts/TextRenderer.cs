@@ -1,10 +1,9 @@
-﻿// Copyright (c) Six Labors and contributors.
+// Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using SixLabors.Primitives;
 
 namespace SixLabors.Fonts
 {
@@ -72,9 +71,9 @@ namespace SixLabors.Fonts
         {
             IReadOnlyList<GlyphLayout> glyphsToRender = this.layoutEngine.GenerateLayout(text, options);
 
-            Vector2 dpi = new Vector2(options.DpiX, options.DpiY);
+            var dpi = new Vector2(options.DpiX, options.DpiY);
 
-            RectangleF rect = TextMeasurer.GetBounds(glyphsToRender, dpi);
+            FontRectangle rect = TextMeasurer.GetBounds(glyphsToRender, dpi);
 
             this.renderer.BeginText(rect);
 

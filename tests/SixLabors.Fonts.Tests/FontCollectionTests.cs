@@ -1,4 +1,4 @@
-﻿using Xunit;
+using Xunit;
 
 namespace SixLabors.Fonts.Tests
 {
@@ -17,9 +17,23 @@ namespace SixLabors.Fonts.Tests
         }
 
         [Fact]
+        public void InstallViaPathInstallFontFileInstances()
+        {
+            var sut = new FontCollection();
+            var family = sut.Install(TestFonts.CarterOneFile, out var descriptions);
+
+            var allInstances = sut.FindAll(family.Name);
+
+            Assert.All(allInstances, i =>
+            {
+                var font = Assert.IsType<FileFontInstance>(i);
+            });
+        }
+
+        [Fact]
         public void InstallViaStreamReturnsDecription()
         {
-            FontCollection sut = new FontCollection();
+            var sut = new FontCollection();
             using (System.IO.Stream s = TestFonts.CarterOneFileData())
             {
                 FontFamily family = sut.Install(s, out FontDescription description);
