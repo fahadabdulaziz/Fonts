@@ -102,9 +102,6 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" IsImplicitlyDefined="true"  />
     <!--TODO: Enable this once tests Stylecop issues are fixed-->
     <!--<PackageReference Include="StyleCop.Analyzers" IsImplicitlyDefined="true"  />-->
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)shared-infrastructure\stylecop.json" Visible="false" />
-    <!--NuGet package icon source-->
-    <None Include="$(MSBuildThisFileDirectory)shared-infrastructure\branding\icons\fonts\sixlabors.fonts.128.png" Pack="true" PackagePath="\icon.png"  Visible="false" />
   </ItemGroup>
 
 </Project>
