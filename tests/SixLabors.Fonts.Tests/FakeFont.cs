@@ -1,6 +1,7 @@
-﻿using Xunit;
+using Xunit;
 
 using SixLabors.Fonts.Tests.Fakes;
+using System.Globalization;
 
 namespace SixLabors.Fonts.Tests
 {
@@ -19,8 +20,14 @@ namespace SixLabors.Fonts.Tests
 
         public static Font CreateFont(string text)
         {
+            return CreateFontWithInstance(text, out _);
+        }
+
+        internal static Font CreateFontWithInstance(string text, out FakeFontInstance instance)
+        {
             var fc = new FontCollection();
-            Font d = fc.Install(FakeFontInstance.CreateFontWithVaryingVerticalFontMetrics(text)).CreateFont(12);
+            instance = FakeFontInstance.CreateFontWithVaryingVerticalFontMetrics(text);
+            Font d = fc.Install(instance, CultureInfo.InvariantCulture).CreateFont(12);
             return new Font(d, 1);
         }
     }

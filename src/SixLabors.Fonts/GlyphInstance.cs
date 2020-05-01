@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Buffers;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using SixLabors.Fonts.Tables.General.Glyphs;
 
 namespace SixLabors.Fonts
 {
@@ -15,26 +17,23 @@ namespace SixLabors.Fonts
         private static readonly Vector2 Scale = new Vector2(1, -1);
 
         private readonly ushort sizeOfEm;
-        private readonly Vector2[] controlPoints;
-        private readonly bool[] onCurves;
-        private readonly ushort[] endPoints;
+        private readonly GlyphVector vector;
         private readonly short leftSideBearing;
         private readonly float scaleFactor;
 
-        internal GlyphInstance(FontInstance font, Vector2[] controlPoints, bool[] onCurves, ushort[] endPoints, Bounds bounds, ushort advanceWidth, short leftSideBearing, ushort sizeOfEm, ushort index)
+        internal GlyphInstance(FontInstance font, GlyphVector vector, ushort advanceWidth, short leftSideBearing, ushort sizeOfEm, ushort index, GlyphType glyphType = GlyphType.Standard, GlyphColor? glyphColor = null)
         {
             this.Font = font;
             this.sizeOfEm = sizeOfEm;
-            this.controlPoints = controlPoints;
-            this.onCurves = onCurves;
-            this.endPoints = endPoints;
-            this.Bounds = bounds;
+            this.vector = vector;
+
             this.AdvanceWidth = advanceWidth;
             this.Index = index;
             this.Height = sizeOfEm - this.Bounds.Min.Y;
-
+            this.GlyphType = glyphType;
             this.leftSideBearing = leftSideBearing;
             this.scaleFactor = (float)(this.sizeOfEm * 72f);
+            this.GlyphColor = glyphColor;
         }
 
         /// <summary>
@@ -51,7 +50,7 @@ namespace SixLabors.Fonts
         /// <value>
         /// The bounds.
         /// </value>
-        internal Bounds Bounds { get; }
+        internal Bounds Bounds => this.vector.Bounds;
 
         /// <summary>
         /// Gets the width of the advance.
@@ -70,6 +69,22 @@ namespace SixLabors.Fonts
         public float Height { get; }
 
         /// <summary>
+        /// Gets a value indicating the type of glyph instance this is.
+        /// </summary>
+        /// <value>
+        /// The type of this glyph
+        /// </value>
+        public GlyphType GlyphType { get; }
+
+        /// <summary>
+        /// Gets the color of this glyph
+        /// </summary>
+        /// <value>
+        /// The color of the glyph when the <see cref="GlyphType"/> is <see cref="GlyphType.ColrLayer"/>
+        /// </value>
+        public GlyphColor? GlyphColor { get; }
+
+        /// <summary>
         /// Gets the index.
         /// </summary>
         /// <value>
@@ -85,17 +100,17 @@ namespace SixLabors.Fonts
         /// <summary>
         /// Gets the points defining the shape of this glyph
         /// </summary>
-        public Vector2[] ControlPoints => this.controlPoints;
+        public Vector2[] ControlPoints => this.vector.ControlPoints;
 
         /// <summary>
         /// Gets wether or not the corresponding control point is on a curve
         /// </summary>
-        public bool[] OnCurves => this.onCurves;
+        public bool[] OnCurves => this.vector.OnCurves;
 
         /// <summary>
         /// Gets the end points
         /// </summary>
-        public ushort[] EndPoints => this.endPoints;
+        public ushort[] EndPoints => this.vector.EndPoints;
 
         /// <summary>
         /// Gets the distance from the bounding box start
@@ -140,25 +155,29 @@ namespace SixLabors.Fonts
 
             if (surface.BeginGlyph(box, paramaters))
             {
-                int startOfContor = 0;
+                if (this.GlyphColor.HasValue && surface is IColorGlyphRenderer colorSurface)
+                {
+                    colorSurface.SetColor(this.GlyphColor.Value);
+                }
+
                 int endOfContor = -1;
-                for (int i = 0; i < this.endPoints.Length; i++)
+                for (int i = 0; i < this.vector.EndPoints.Length; i++)
                 {
                     surface.BeginFigure();
-                    startOfContor = endOfContor + 1;
-                    endOfContor = this.endPoints[i];
+                    int startOfContor = endOfContor + 1;
+                    endOfContor = this.vector.EndPoints[i];
 
                     Vector2 prev = Vector2.Zero;
                     Vector2 curr = this.GetPoint(ref scaledPoint, endOfContor) + location;
                     Vector2 next = this.GetPoint(ref scaledPoint, startOfContor) + location;
 
-                    if (this.onCurves[endOfContor])
+                    if (this.vector.OnCurves[endOfContor])
                     {
                         surface.MoveTo(curr);
                     }
                     else
                     {
-                        if (this.onCurves[startOfContor])
+                        if (this.vector.OnCurves[startOfContor])
                         {
                             surface.MoveTo(next);
                         }
@@ -180,7 +199,7 @@ namespace SixLabors.Fonts
                         int prevIndex = startOfContor + (((length + p) - 1) % length);
                         next = this.GetPoint(ref scaledPoint, nextIndex) + location;
 
-                        if (this.onCurves[currentIndex])
+                        if (this.vector.OnCurves[currentIndex])
                         {
                             // This is a straight line.
                             surface.LineTo(curr);
@@ -190,13 +209,13 @@ namespace SixLabors.Fonts
                             Vector2 prev2 = prev;
                             Vector2 next2 = next;
 
-                            if (!this.onCurves[prevIndex])
+                            if (!this.vector.OnCurves[prevIndex])
                             {
                                 prev2 = (curr + prev) / 2;
                                 surface.LineTo(prev2);
                             }
 
-                            if (!this.onCurves[nextIndex])
+                            if (!this.vector.OnCurves[nextIndex])
                             {
                                 next2 = (curr + next) / 2;
                             }
@@ -216,7 +235,7 @@ namespace SixLabors.Fonts
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Vector2 GetPoint(ref Vector2 scaledPoint, int pointIndex)
         {
-            Vector2 point = Scale * ((this.controlPoints[pointIndex] * scaledPoint) / this.scaleFactor); // scale each point as we go, w will now have the correct relative point size
+            Vector2 point = Scale * ((this.vector.ControlPoints[pointIndex] * scaledPoint) / this.scaleFactor); // scale each point as we go, w will now have the correct relative point size
 
             return point;
         }

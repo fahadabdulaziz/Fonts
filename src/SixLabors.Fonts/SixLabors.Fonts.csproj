@@ -21,6 +21,10 @@
     <PackageReference Include="System.Numerics.Vectors" />
     <PackageReference Include="System.Buffers" />
     <PackageReference Include="System.Memory" />  
+    <PackageReference Include="System.Memory" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />    
   </ItemGroup>
 

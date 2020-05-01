@@ -11,8 +11,8 @@ namespace SixLabors.Fonts
     /// </summary>
     public sealed class Font
     {
-        private readonly FontStyle requestedStyle;
         private readonly Lazy<IFontInstance?> instance;
+        private readonly Lazy<string> fontName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Font"/> class.
@@ -23,9 +23,10 @@ namespace SixLabors.Fonts
         public Font(FontFamily family, float size, FontStyle style)
         {
             this.Family = family ?? throw new ArgumentNullException(nameof(family));
-            this.requestedStyle = style;
+            this.RequestedStyle = style;
             this.Size = size;
             this.instance = new Lazy<IFontInstance?>(this.LoadInstanceInternal);
+            this.fontName = new Lazy<string>(this.LoadFontName);
         }
 
         /// <summary>
@@ -65,9 +66,17 @@ namespace SixLabors.Fonts
         /// <param name="prototype">The prototype.</param>
         /// <param name="size">The size.</param>
         public Font(Font prototype, float size)
-            : this(prototype.Family, size, prototype.requestedStyle)
+            : this(prototype.Family, size, prototype.RequestedStyle)
         {
         }
+
+        /// <summary>
+        /// Gets the family.
+        /// </summary>
+        /// <value>
+        /// The family.
+        /// </value>
+        internal FontStyle RequestedStyle { get; }
 
         /// <summary>
         /// Gets the family.
@@ -83,7 +92,7 @@ namespace SixLabors.Fonts
         /// <value>
         /// The name.
         /// </value>
-        public string Name => this.Instance.Description.FontName;
+        public string Name => this.fontName.Value;
 
         /// <summary>
         /// Gets the size.
@@ -155,17 +164,22 @@ namespace SixLabors.Fonts
             return new Glyph(this.Instance.GetGlyph(codePoint), this.Size);
         }
 
+        private string LoadFontName()
+        {
+            return this.instance.Value?.Description.FontName(this.Family.Culture) ?? string.Empty;
+        }
+
         private IFontInstance? LoadInstanceInternal()
         {
-            IFontInstance? instance = this.Family.Find(this.requestedStyle);
+            IFontInstance? instance = this.Family.Find(this.RequestedStyle);
 
-            if (instance is null && this.requestedStyle.HasFlag(FontStyle.Italic))
+            if (instance is null && this.RequestedStyle.HasFlag(FontStyle.Italic))
             {
                 // can find style requested and they want one thats atleast partial itallic try the regual italic
                 instance = this.Family.Find(FontStyle.Italic);
             }
 
-            if (instance is null && this.requestedStyle.HasFlag(FontStyle.Bold))
+            if (instance is null && this.RequestedStyle.HasFlag(FontStyle.Bold))
             {
                 // can find style requested and they want one thats atleast partial bold try the regular bold
                 instance = this.Family.Find(FontStyle.Bold);

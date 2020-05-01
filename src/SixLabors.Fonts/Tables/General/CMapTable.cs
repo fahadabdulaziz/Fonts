@@ -12,54 +12,54 @@ namespace SixLabors.Fonts.Tables.General
     internal sealed class CMapTable : Table
     {
         private const string TableName = "cmap";
-        private readonly CMapSubTable? table;
+        private readonly CMapSubTable[] platformTables;
 
         public CMapTable(CMapSubTable[] tables)
         {
             this.Tables = tables;
 
             // lets just pick the best table for us.. lets jsut treat everything as windows and get the format 4 if possible
-            CMapSubTable? table = null;
+            var tbls = new List<CMapSubTable>();
             foreach (CMapSubTable t in this.Tables)
             {
                 if (t != null)
                 {
                     if (t.Platform == PlatformIDs.Windows)
                     {
-                        ushort format = table?.Format ?? 0;
-                        if (t.Format > format)
-                        {
-                            table = t;
-                        }
+                        tbls.Add(t);
                     }
                 }
             }
 
-            this.table = table;
+            this.platformTables = tbls.ToArray();
         }
 
         internal CMapSubTable[] Tables { get; }
 
-        public ushort GetGlyphId(int codePoint)
+        public bool TryGetGlyphId(int codePoint, out ushort glyphId)
         {
             // use the best match only
-            if (this.table is object)
+            foreach (CMapSubTable t in this.platformTables)
             {
-                return this.table.GetGlyphId(codePoint);
+                // keep looking until we have an index thats not the fallback.
+                if (t.TryGetGlyphId(codePoint, out glyphId))
+                {
+                    return true;
+                }
             }
 
             // didn't have a windows match just use any and hope for the best
             foreach (CMapSubTable t in this.Tables)
             {
                 // keep looking until we have an index thats not the fallback.
-                ushort index = t.GetGlyphId(codePoint);
-                if (index > 0)
+                if (t.TryGetGlyphId(codePoint, out glyphId))
                 {
-                    return index;
+                    return true;
                 }
             }
 
-            return 0;
+            glyphId = 0;
+            return false;
         }
 
         public static CMapTable Load(FontReader reader)
@@ -96,6 +96,9 @@ namespace SixLabors.Fonts.Tables.General
                         break;
                     case 4:
                         tables.AddRange(Format4SubTable.Load(encoding, reader));
+                        break;
+                    case 12:
+                        tables.AddRange(Format12SubTable.Load(encoding, reader));
                         break;
                 }
             }

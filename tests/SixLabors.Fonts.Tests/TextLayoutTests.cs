@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Numerics;
 using SixLabors.Fonts.Tests.Fakes;
 using Xunit;
@@ -192,7 +193,7 @@ namespace SixLabors.Fonts.Tests
         }
 
         [Theory]
-        [InlineData("a", 100, 100, 125, 452)]
+        [InlineData("a", 100, 100, 125, 640)]
         public void LayoutWithLocation(string text, float x, float y, float expectedX, float expectedY)
         {
             var c = new FontCollection();
@@ -210,7 +211,7 @@ namespace SixLabors.Fonts.Tests
         public static Font CreateFont(string text)
         {
             var fc = new FontCollection();
-            Font d = fc.Install(new FakeFontInstance(text)).CreateFont(12);
+            Font d = fc.Install(new FakeFontInstance(text), CultureInfo.InvariantCulture).CreateFont(12);
             return new Font(d, 1);
         }
     }

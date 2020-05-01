@@ -34,6 +34,7 @@ EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\sharedinfrastructure\src\SharedInfrastructure\SharedInfrastructure.projitems*{09e744ec-4852-4fc7-be78-c1b399f17967}*SharedItemsImports = 5
+		shared-infrastructure\src\SharedInfrastructure\SharedInfrastructure.projitems*{09e744ec-4852-4fc7-be78-c1b399f17967}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
